@@ -65,7 +65,7 @@ canvas { position:absolute; top:0; left:0; z-index:1; }
   transition:background 0.2s; width:100px; height:100px; text-align:center;
 }
 .link-button:hover, .dashboard-button:hover { background: rgba(255,255,255,0.15); }
-.link-button img { width:30px; height:30px; }
+.link-button img, .dashboard-button img { width:50px; height:50px; }
 
 #viewerFrame {
   position:absolute; top:0; left:200px;
@@ -158,12 +158,6 @@ canvas { position:absolute; top:0; left:0; z-index:1; }
     <div id="dashUpdateMsg" style="opacity:0.8; margin-top:5px;"></div>
   </div>
 
-  <!-- NEW BUTTON -->
-  <div class="dashboard-button" onclick="window.location.href='ishowspeed.html'">
-    <img src="https://img.icons8.com/ios-glyphs/30/ffffff/extension.png" style="width:50px;height:50px;">
-    Load up the extension thingy
-  </div>
-
   <h3 style="margin-top:25px;">Games you may like</h3>
   <div class="top-games">
     <div class="game"><img src="https://orig00.deviantart.net/4ad2/f/2017/243/9/a/minecraft_grass_block_vector_by_astrorious-dblzbbl.png"/><br>Minecraft 1.5.2</div>
@@ -174,11 +168,17 @@ canvas { position:absolute; top:0; left:0; z-index:1; }
   </div>
 
   <div id="recentlyPlayedBox">
-    <h3>Recently played</h3>
-    <div id="recentList" class="recent-list"></div>
-    <p style="margin-top:10px; font-size:12px; opacity:0.7;">(recently opened)</p>
-  </div>
+  <h3>Recently played</h3>
+  <div id="recentList" class="recent-list"></div>
+  <p style="margin-top:10px; font-size:12px; opacity:0.7;">(recently opened)</p>
 </div>
+
+<!-- BUTTON UNDER RECENTLY PLAYED -->
+<div id="extensionButton" class="dashboard-button" style="margin-top:15px;" onclick="window.location.href='ishowspeed.html'">
+  <img src="https://blobby-boi.github.io/BlobbypassXSS/favicon.png">
+  Load up the extension killer
+</div>
+
 
 <!-- GAMES -->
 <div id="games" class="panel">
@@ -231,8 +231,7 @@ canvas { position:absolute; top:0; left:0; z-index:1; }
   <p>Andromeda is released in 11/15/25 …</p>
   <p>Andromeda is a website that stores unblocked links like games, proxys and everything. Andromeda has no ways to bypass school extensions, exploiting or anything related to this</p>
   <p>If you wanna suggest a link, report or add changes to Andromeda, email me and i got u. Make sure links are PG-13 or less.</p>
-  <p>Btw i asked chatgpt to create this website and bro... dont ever work with chatgpt because they keep making 5% of the script they give me,
-     adding features that i didnt ask for and add bugs. Basicly chatgpt is doing the most random shit ever.</p>
+  <p>Btw i asked chatgpt to create this website and bro... dont ever work with chatgpt because they keep making 5% of the script they give me, adding features that i didnt ask for and add bugs. Basicly chatgpt is doing the most random shit ever.</p>
   <p>.</p>
   <p>GMAIL: rdgadvance112911@gmail.com</p>
   <p>Version: 1.0</p>
