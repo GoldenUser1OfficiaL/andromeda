@@ -1,128 +1,126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Galaxy Sidebar Interface</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Galaxy Sidebar Interface</title>
 
-  <!-- Firebase JS SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<!-- Firebase JS SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  <style>
-    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:black; font-family:sans-serif; color:white; }
-    canvas { position:absolute; top:0; left:0; z-index:1; }
-    #clock { position:absolute; top:20px; right:20px; color:white; font-size:24px; font-weight:bold; z-index:3; text-shadow:0 0 10px #fff; }
+<style>
+html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:black; font-family:sans-serif; color:white; }
+canvas { position:absolute; top:0; left:0; z-index:1; }
+#clock { position:absolute; top:20px; right:20px; color:white; font-size:24px; font-weight:bold; z-index:3; text-shadow:0 0 10px #fff; }
 
-    #sidebar {
-      position:fixed; top:0; left:0; width:200px; height:100%;
-      background:rgba(20,20,40,0.95); padding:20px; box-sizing:border-box;
-      z-index:4; display:flex; flex-direction:column; gap:10px;
-    }
+#sidebar {
+  position:fixed; top:0; left:0; width:200px; height:100%;
+  background:rgba(20,20,40,0.95); padding:20px; box-sizing:border-box;
+  z-index:4; display:flex; flex-direction:column; gap:10px;
+}
 
-    .sidebar-section { margin-bottom:20px; }
-    .sidebar-item {
-      display:flex; align-items:center; gap:10px;
-      cursor:pointer; padding:8px; border-radius:6px;
-      transition:background 0.2s;
-    }
-    .sidebar-item:hover { background: rgba(255,255,255,0.1); }
-    .sidebar-item img { width:20px; height:20px; }
-    .divider { border-bottom:1px solid rgba(255,255,255,0.2); margin:10px 0; }
+.sidebar-section { margin-bottom:20px; }
+.sidebar-item {
+  display:flex; align-items:center; gap:10px;
+  cursor:pointer; padding:8px; border-radius:6px;
+  transition:background 0.2s;
+}
+.sidebar-item:hover { background: rgba(255,255,255,0.1); }
+.sidebar-item img { width:20px; height:20px; }
+.divider { border-bottom:1px solid rgba(255,255,255,0.2); margin:10px 0; }
 
-    .panel {
-      position:absolute; top:0; left:200px;
-      width:calc(100% - 200px); height:100%;
-      padding:40px; box-sizing:border-box;
-      overflow-y:auto; display:none; z-index:2;
-      color:white; opacity:0; transition:opacity 0.5s ease;
-    }
-    .panel.active { display:block; opacity:1; }
+.panel {
+  position:absolute; top:0; left:200px;
+  width:calc(100% - 200px); height:100%;
+  padding:40px; box-sizing:border-box;
+  overflow-y:auto; display:none; z-index:2;
+  color:white; opacity:0; transition:opacity 0.5s ease;
+}
+.panel.active { display:block; opacity:1; }
 
-    #text-logo {
-      font-size:60px; font-weight:bold; text-align:center; margin-bottom:20px;
-      background: linear-gradient(90deg, #ff5f6d, #ffc371, #00f, #0ff);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      animation: animateGradient 5s linear infinite;
-    }
-    @keyframes animateGradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+#text-logo {
+  font-size:60px; font-weight:bold; text-align:center; margin-bottom:20px;
+  background: linear-gradient(90deg, #ff5f6d, #ffc371, #00f, #0ff);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  animation: animateGradient 5s linear infinite;
+}
+@keyframes animateGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
-    .top-games { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:24px; }
-    .game {
-      background: rgba(255,255,255,0.05); padding:10px; border-radius:8px;
-      text-align:center; width:120px;
-    }
-    .game img { width:80px; height:80px; margin-bottom:5px; }
+.top-games { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:24px; }
+.game {
+  background: rgba(255,255,255,0.05); padding:10px; border-radius:8px;
+  text-align:center; width:120px;
+}
+.game img { width:80px; height:80px; margin-bottom:5px; }
 
-    .link-button, .dashboard-button {
-      display:flex; align-items:center; gap:10px;
-      background: rgba(255,255,255,0.05); padding:10px 15px;
-      border-radius:8px; margin-bottom:10px; cursor:pointer;
-      transition:background 0.2s;
-    }
-    .link-button:hover, .dashboard-button:hover { background: rgba(255,255,255,0.15); }
-    .link-button img { width:30px; height:30px; }
+.link-button, .dashboard-button {
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px;
+  background: rgba(255,255,255,0.05); padding:10px;
+  border-radius:8px; margin-bottom:10px; cursor:pointer;
+  transition:background 0.2s; width:100px; height:100px; text-align:center;
+}
+.link-button:hover, .dashboard-button:hover { background: rgba(255,255,255,0.15); }
+.link-button img { width:30px; height:30px; }
 
-    #viewerFrame {
-      position:absolute; top:0; left:200px;
-      width:calc(100% - 200px); height:100%;
-      border:none; background:black; z-index:3; display:none;
-    }
+#viewerFrame {
+  position:absolute; top:0; left:200px;
+  width:calc(100% - 200px); height:100%;
+  border:none; background:black; z-index:3; display:none;
+}
 
-    #recentlyPlayedBox {
-      margin-top:10px; background:rgba(255,255,255,0.03);
-      padding:12px; border-radius:10px; width:calc(100% - 260px);
-      max-width:900px;
-    }
-    #recentlyPlayedBox h3 { margin:0 0 10px 0; font-size:18px; }
+#recentlyPlayedBox {
+  margin-top:10px; background:rgba(255,255,255,0.03);
+  padding:12px; border-radius:10px; width:calc(100% - 260px);
+  max-width:900px;
+}
+#recentlyPlayedBox h3 { margin:0 0 10px 0; font-size:18px; }
 
-    .recent-list { display:flex; gap:10px; }
-    .recent-item {
-      background:rgba(255,255,255,0.04); padding:8px; border-radius:8px;
-      display:flex; align-items:center; gap:8px; cursor:pointer; min-width:160px;
-    }
-    .recent-item img { width:36px; height:36px; border-radius:6px; }
-    .recent-title { font-size:14px; line-height:1.1; }
+.recent-list { display:flex; gap:10px; }
+.recent-item {
+  background:rgba(255,255,255,0.04); padding:8px; border-radius:8px;
+  display:flex; align-items:center; gap:8px; cursor:pointer; min-width:160px;
+}
+.recent-item img { width:36px; height:36px; border-radius:6px; }
+.recent-title { font-size:14px; line-height:1.1; }
 
-    /* UPDATE FRAME STYLE */
-    #dashboardUpdateBox {
-      background:rgba(255,255,255,0.05);
-      padding:18px;
-      border-radius:10px;
-      margin-top:25px;
-      max-width:900px;
-    }
-    #dashboardUpdateBox h3 { margin:0 0 8px 0; }
+#dashboardUpdateBox {
+  background:rgba(255,255,255,0.05);
+  padding:18px;
+  border-radius:10px;
+  margin-top:25px;
+  max-width:900px;
+}
+#dashboardUpdateBox h3 { margin:0 0 8px 0; }
 
-    /* POPUP */
-    #updateOverlay {
-      position:fixed; top:0; left:0; width:100%; height:100%;
-      background:rgba(0,0,0,0.7); z-index:10; display:none;
-      align-items:center; justify-content:center;
-      backdrop-filter: blur(4px);
-    }
-    #updatePopup {
-      background: rgba(30,30,50,0.95);
-      border:1px solid rgba(255,255,255,0.2);
-      width:450px; padding:25px; border-radius:12px;
-      text-align:center; box-shadow:0 0 20px rgba(0,0,0,0.6);
-      animation: fadeIn 0.4s ease;
-    }
-    #updatePopup h2 { margin-top:0; font-size:28px; }
-    #updatePopup button {
-      margin-top:20px; padding:10px 20px; background:#4b8fff;
-      border:none; border-radius:8px; color:white;
-      cursor:pointer; font-size:16px;
-    }
-    @keyframes fadeIn {
-      from { opacity:0; transform:scale(0.8); }
-      to { opacity:1; transform:scale(1); }
-    }
-  </style>
+#updateOverlay {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.7); z-index:10; display:none;
+  align-items:center; justify-content:center;
+  backdrop-filter: blur(4px);
+}
+#updatePopup {
+  background: rgba(30,30,50,0.95);
+  border:1px solid rgba(255,255,255,0.2);
+  width:450px; padding:25px; border-radius:12px;
+  text-align:center; box-shadow:0 0 20px rgba(0,0,0,0.6);
+  animation: fadeIn 0.4s ease;
+}
+#updatePopup h2 { margin-top:0; font-size:28px; }
+#updatePopup button {
+  margin-top:20px; padding:10px 20px; background:#4b8fff;
+  border:none; border-radius:8px; color:white;
+  cursor:pointer; font-size:16px;
+}
+@keyframes fadeIn {
+  from { opacity:0; transform:scale(0.8); }
+  to { opacity:1; transform:scale(1); }
+}
+</style>
 </head>
 <body>
 
@@ -154,16 +152,16 @@
 <div id="dashboard" class="panel active">
   <div id="text-logo">Andromeda V1</div>
 
-  <!-- UPDATE FRAME -->
   <div id="dashboardUpdateBox">
     <h3>Latest Update</h3>
     <div id="dashUpdateTitle" style="font-size:20px; font-weight:bold;"></div>
     <div id="dashUpdateMsg" style="opacity:0.8; margin-top:5px;"></div>
   </div>
 
-  <!-- NEW EXTENSION BUTTON -->
+  <!-- NEW BUTTON -->
   <div class="dashboard-button" onclick="window.location.href='ishowspeed.html'">
-    <img src="https://img.icons8.com/ios-glyphs/30/ffffff/extension.png" alt="extension"/> Load up the extension thingy
+    <img src="https://img.icons8.com/ios-glyphs/30/ffffff/extension.png" style="width:50px;height:50px;">
+    Load up the extension thingy
   </div>
 
   <h3 style="margin-top:25px;">Games you may like</h3>
@@ -250,195 +248,90 @@
 </div>
 
 <script>
+let linkMode = "normal";
+function changeLinkMode(mode) { linkMode = mode; }
 
-  /* ---------- Link mode ---------- */
-  let linkMode = "normal";
-  function changeLinkMode(mode) { linkMode = mode; }
+function openLink(url, title = "", icon = "") {
+  addRecent({ url, title: title || url, icon: icon || null });
+  const viewer = document.getElementById("viewerFrame");
+  if (linkMode === "normal") { viewer.style.display = "none"; window.open(url, "_blank"); return; }
+  let finalURL = url;
+  if (linkMode==="duck") finalURL=`https://duckduckgo.com/?q=${encodeURIComponent(url)}`;
+  if (linkMode==="bing") finalURL=`https://www.bing.com/search?q=${encodeURIComponent(url)}`;
+  if (linkMode==="google") finalURL=`https://www.google.com/search?q=${encodeURIComponent(url)}`;
+  if (linkMode==="iframe") finalURL=url;
+  viewer.src=finalURL;
+  document.querySelectorAll(".panel").forEach(p=>p.style.display="none");
+  viewer.style.display="block";
+}
 
-  function openLink(url, title = "", icon = "") {
-    addRecent({ url, title: title || url, icon: icon || null });
+const RECENT_KEY="andromeda_recent_links_v1";
+const MAX_RECENT=3;
 
-    const viewer = document.getElementById("viewerFrame");
-
-    if (linkMode === "normal") {
-      viewer.style.display = "none";
-      window.open(url, "_blank");
-      return;
-    }
-
-    let finalURL = url;
-    if (linkMode === "duck") finalURL = `https://duckduckgo.com/?q=${encodeURIComponent(url)}`;
-    if (linkMode === "bing") finalURL = `https://www.bing.com/search?q=${encodeURIComponent(url)}`;
-    if (linkMode === "google") finalURL = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
-    if (linkMode === "iframe") finalURL = url;
-
-    viewer.src = finalURL;
-    document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
-    viewer.style.display = "block";
-  }
-
-  /* ---------- Recently Played ---------- */
-  const RECENT_KEY = "andromeda_recent_links_v1";
-  const MAX_RECENT = 3;
-
-  function addRecent(item) {
-    try {
-      const raw = localStorage.getItem(RECENT_KEY);
-      let arr = raw ? JSON.parse(raw) : [];
-
-      const normalized = {
-        url: item.url,
-        title: (item.title || item.url).toString(),
-        icon: item.icon || null,
-        ts: Date.now()
-      };
-
-      arr = arr.filter(e => e.url !== normalized.url);
-      arr.unshift(normalized);
-      if (arr.length > MAX_RECENT) arr = arr.slice(0, MAX_RECENT);
-
-      localStorage.setItem(RECENT_KEY, JSON.stringify(arr));
-      renderRecentlyPlayed();
-    } catch {}
-  }
-
-  function getRecent() {
-    try {
-      const raw = localStorage.getItem(RECENT_KEY);
-      const arr = raw ? JSON.parse(raw) : [];
-      return Array.isArray(arr) ? arr : [];
-    } catch {
-      return [];
-    }
-  }
-
-  function clearRecent() {
-    localStorage.removeItem(RECENT_KEY);
+function addRecent(item){
+  try{
+    const raw=localStorage.getItem(RECENT_KEY);
+    let arr=raw?JSON.parse(raw):[];
+    const normalized={ url:item.url, title:(item.title||item.url).toString(), icon:item.icon||null, ts:Date.now() };
+    arr=arr.filter(e=>e.url!==normalized.url);
+    arr.unshift(normalized);
+    if(arr.length>MAX_RECENT) arr=arr.slice(0,MAX_RECENT);
+    localStorage.setItem(RECENT_KEY,JSON.stringify(arr));
     renderRecentlyPlayed();
-  }
+  } catch{}
+}
 
-  function renderRecentlyPlayed() {
-    const container = document.getElementById("recentList");
-    container.innerHTML = "";
+function getRecent(){
+  try{ const raw=localStorage.getItem(RECENT_KEY); const arr=raw?JSON.parse(raw):[]; return Array.isArray(arr)?arr:[]; }catch{return [];}
+}
 
-    const items = getRecent();
-    if (!items.length) {
-      container.innerHTML =
-        `<div style="opacity:0.7; font-size:13px;">No recently played links yet - play something.</div>`;
-      return;
-    }
+function clearRecent(){ localStorage.removeItem(RECENT_KEY); renderRecentlyPlayed(); }
 
-    items.forEach(it => {
-      const div = document.createElement("div");
-      div.className = "recent-item";
-      div.onclick = () => openLink(it.url, it.title, it.icon);
-
-      const img = document.createElement("img");
-      img.src = it.icon || "https://img.icons8.com/ios-glyphs/90/ffffff/controller.png";
-
-      const t = document.createElement("div");
-      t.className = "recent-title";
-      t.innerText = it.title.length > 36 ? it.title.slice(0,36)+"…" : it.title;
-
-      div.appendChild(img);
-      div.appendChild(t);
-      container.appendChild(div);
-    });
-  }
-
-  /* ---------- Galaxy Animation ---------- */
-  const canvas = document.getElementById('galaxy');
-  const ctx = canvas.getContext('2d');
-
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-
-  const stars = [];
-  for (let i = 0; i < 300; i++) {
-    stars.push({
-      x: Math.random()*canvas.width,
-      y: Math.random()*canvas.height,
-      size: Math.random()*2,
-      speed: Math.random()*0.5 + 0.2
-    });
-  }
-
-  function animate() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = "white";
-
-    stars.forEach(s => {
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
-      ctx.fill();
-      s.y += s.speed;
-      if (s.y > canvas.height) {
-        s.y = 0;
-        s.x = Math.random()*canvas.width;
-      }
-    });
-
-    requestAnimationFrame(animate);
-  }
-  animate();
-
-  /* ---------- Clock ---------- */
-  function updateClock() {
-    const now = new Date();
-    let h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
-    let ampm = h >= 12 ? "PM" : "AM";
-    h = h % 12; if (h === 0) h = 12;
-
-    document.getElementById("clock").textContent =
-      `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")} ${ampm}`;
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
-
-  /* ---------- Panels ---------- */
-  function showPanel(id) {
-    document.getElementById("viewerFrame").style.display = "none";
-
-    document.querySelectorAll(".panel").forEach(p => {
-      if (p.id === id) {
-        p.style.display = "block";
-        setTimeout(() => p.classList.add("active"), 10);
-      } else {
-        p.classList.remove("active");
-        setTimeout(() => p.style.display = "none", 500);
-      }
-    });
-  }
-
-  /* ---------- Popup ---------- */
-  function syncUpdateFrame() {
-    document.getElementById("dashUpdateTitle").textContent =
-      document.getElementById("updateTitle").textContent;
-
-    document.getElementById("dashUpdateMsg").textContent =
-      document.getElementById("updateMsg").textContent;
-  }
-
-  function showUpdate() {
-    syncUpdateFrame();
-    document.getElementById("updateOverlay").style.display = "flex";
-  }
-
-  function closeUpdate() {
-    document.getElementById("updateOverlay").style.display = "none";
-  }
-
-  setTimeout(showUpdate, 800);
-
-  document.addEventListener("DOMContentLoaded", () => {
-    renderRecentlyPlayed();
-    syncUpdateFrame();
+function renderRecentlyPlayed(){
+  const container=document.getElementById("recentList"); container.innerHTML="";
+  const items=getRecent();
+  if(!items.length){ container.innerHTML=`<div style="opacity:0.7; font-size:13px;">No recently played links yet - play something.</div>`; return; }
+  items.forEach(it=>{
+    const div=document.createElement("div"); div.className="recent-item"; div.onclick=()=>openLink(it.url,it.title,it.icon);
+    const img=document.createElement("img"); img.src=it.icon||"https://img.icons8.com/ios-glyphs/90/ffffff/controller.png";
+    const t=document.createElement("div"); t.className="recent-title"; t.innerText=it.title.length>36?it.title.slice(0,36)+"…":it.title;
+    div.appendChild(img); div.appendChild(t); container.appendChild(div);
   });
+}
 
+const canvas=document.getElementById('galaxy'); const ctx=canvas.getContext('2d');
+function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+resizeCanvas(); window.addEventListener('resize',resizeCanvas);
+
+const stars=[]; for(let i=0;i<300;i++){ stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*2,speed:Math.random()*0.5+0.2}); }
+function animate(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle="white";
+  stars.forEach(s=>{ ctx.beginPath(); ctx.arc(s.x,s.y,s.size,0,Math.PI*2); ctx.fill(); s.y+=s.speed; if(s.y>canvas.height){ s.y=0; s.x=Math.random()*canvas.width; } });
+  requestAnimationFrame(animate);
+} animate();
+
+function updateClock(){ const now=new Date(); let h=now.getHours(),m=now.getMinutes(),s=now.getSeconds(); let ampm=h>=12?"PM":"AM"; h=h%12; if(h===0)h=12;
+  document.getElementById("clock").textContent=`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")} ${ampm}`; }
+setInterval(updateClock,1000); updateClock();
+
+function showPanel(id){
+  document.getElementById("viewerFrame").style.display="none";
+  document.querySelectorAll(".panel").forEach(p=>{
+    if(p.id===id){ p.style.display="block"; setTimeout(()=>p.classList.add("active"),10); } 
+    else { p.classList.remove("active"); setTimeout(()=>p.style.display="none",500); }
+  });
+}
+
+function syncUpdateFrame(){
+  document.getElementById("dashUpdateTitle").textContent=document.getElementById("updateTitle").textContent;
+  document.getElementById("dashUpdateMsg").textContent=document.getElementById("updateMsg").textContent;
+}
+
+function showUpdate(){ syncUpdateFrame(); document.getElementById("updateOverlay").style.display="flex"; }
+function closeUpdate(){ document.getElementById("updateOverlay").style.display="none"; }
+setTimeout(showUpdate,800);
+
+document.addEventListener("DOMContentLoaded",()=>{ renderRecentlyPlayed(); syncUpdateFrame(); });
 </script>
 </body>
 </html>
+
