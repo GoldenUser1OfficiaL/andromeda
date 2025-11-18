@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Galaxy Sidebar Interface</title>
+
+  <!-- Firebase JS SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <style>
+    html, body { margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:black; font-family:sans-serif; color:white; }
+    canvas { position:absolute; top:0; left:0; z-index:1; }
+    #clock { position:absolute; top:20px; right:20px; color:white; font-size:24px; font-weight:bold; z-index:3; text-shadow:0 0 10px #fff; }
+
+    #sidebar {
+      position:fixed; top:0; left:0; width:200px; height:100%;
+      background:rgba(20,20,40,0.95); padding:20px; box-sizing:border-box;
+      z-index:4; display:flex; flex-direction:column; gap:10px;
+    }
+
+    .sidebar-section { margin-bottom:20px; }
+    .sidebar-item {
+      display:flex; align-items:center; gap:10px;
+      cursor:pointer; padding:8px; border-radius:6px;
+      transition:background 0.2s;
+    }
+    .sidebar-item:hover { background: rgba(255,255,255,0.1); }
+    .sidebar-item img { width:20px; height:20px; }
+    .divider { border-bottom:1px solid rgba(255,255,255,0.2); margin:10px 0; }
+
+    .panel {
+      position:absolute; top:0; left:200px;
+      width:calc(100% - 200px); height:100%;
+      padding:40px; box-sizing:border-box;
+      overflow-y:auto; display:none; z-index:2;
+      color:white; opacity:0; transition:opacity 0.5s ease;
+    }
+    .panel.active { display:block; opacity:1; }
+
+    #text-logo {
+      font-size:60px; font-weight:bold; text-align:center; margin-bottom:20px;
+      background: linear-gradient(90deg, #ff5f6d, #ffc371, #00f, #0ff);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: animateGradient 5s linear infinite;
+    }
+    @keyframes animateGradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .top-games { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:24px; }
+    .game {
+      background: rgba(255,255,255,0.05); padding:10px; border-radius:8px;
+      text-align:center; width:120px;
+    }
+    .game img { width:80px; height:80px; margin-bottom:5px; }
+
+    .link-button, .dashboard-button {
+      display:flex; align-items:center; gap:10px;
+      background: rgba(255,255,255,0.05); padding:10px 15px;
+      border-radius:8px; margin-bottom:10px; cursor:pointer;
+      transition:background 0.2s;
+    }
+    .link-button:hover, .dashboard-button:hover { background: rgba(255,255,255,0.15); }
+    .link-button img { width:30px; height:30px; }
+
+    #viewerFrame {
+      position:absolute; top:0; left:200px;
+      width:calc(100% - 200px); height:100%;
+      border:none; background:black; z-index:3; display:none;
+    }
+
+    #recentlyPlayedBox {
+      margin-top:10px; background:rgba(255,255,255,0.03);
+      padding:12px; border-radius:10px; width:calc(100% - 260px);
+      max-width:900px;
+    }
+    #recentlyPlayedBox h3 { margin:0 0 10px 0; font-size:18px; }
+
+    .recent-list { display:flex; gap:10px; }
+    .recent-item {
+      background:rgba(255,255,255,0.04); padding:8px; border-radius:8px;
+      display:flex; align-items:center; gap:8px; cursor:pointer; min-width:160px;
+    }
+    .recent-item img { width:36px; height:36px; border-radius:6px; }
+    .recent-title { font-size:14px; line-height:1.1; }
+
+    /* UPDATE FRAME STYLE */
+    #dashboardUpdateBox {
+      background:rgba(255,255,255,0.05);
+      padding:18px;
+      border-radius:10px;
+      margin-top:25px;
+      max-width:900px;
+    }
+    #dashboardUpdateBox h3 { margin:0 0 8px 0; }
+
+    /* POPUP */
+    #updateOverlay {
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(0,0,0,0.7); z-index:10; display:none;
+      align-items:center; justify-content:center;
+      backdrop-filter: blur(4px);
+    }
+    #updatePopup {
+      background: rgba(30,30,50,0.95);
+      border:1px solid rgba(255,255,255,0.2);
+      width:450px; padding:25px; border-radius:12px;
+      text-align:center; box-shadow:0 0 20px rgba(0,0,0,0.6);
+      animation: fadeIn 0.4s ease;
+    }
+    #updatePopup h2 { margin-top:0; font-size:28px; }
+    #updatePopup button {
+      margin-top:20px; padding:10px 20px; background:#4b8fff;
+      border:none; border-radius:8px; color:white;
+      cursor:pointer; font-size:16px;
+    }
+    @keyframes fadeIn {
+      from { opacity:0; transform:scale(0.8); }
+      to { opacity:1; transform:scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-item" onclick="showPanel('dashboard')"><img src="https://img.icons8.com/ios-glyphs/30/ffffff/dashboard.png"/> Dashboard</div>
+    <div class="sidebar-item" onclick="showPanel('about')"><img src="https://img.icons8.com/ios-glyphs/30/ffffff/info.png"/> About</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-item" onclick="showPanel('games')"><img src="https://img.icons8.com/ios-glyphs/30/ffffff/controller.png"/> Games</div>
+    <div class="sidebar-item" onclick="showPanel('emulation')"><img src="https://hiring.gmsmedia.pics/misc/emulator/emulatorjs/logo.png"/> Emulation</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-item" onclick="showPanel('settings')"><img src="https://img.icons8.com/ios-glyphs/30/ffffff/settings.png"/> Settings</div>
+  </div>
+</div>
+
+<div id="clock"></div>
+<canvas id="galaxy"></canvas>
+<iframe id="viewerFrame" sandbox="allow-forms allow-same-origin allow-scripts allow-popups allow-modals"></iframe>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="panel active">
+  <div id="text-logo">Andromeda V1</div>
+
+  <!-- UPDATE FRAME -->
+  <div id="dashboardUpdateBox">
+    <h3>Latest Update</h3>
+    <div id="dashUpdateTitle" style="font-size:20px; font-weight:bold;"></div>
+    <div id="dashUpdateMsg" style="opacity:0.8; margin-top:5px;"></div>
+  </div>
+
+  <!-- NEW EXTENSION BUTTON -->
+  <div class="dashboard-button" onclick="window.location.href='ishowspeed.html'">
+    <img src="https://img.icons8.com/ios-glyphs/30/ffffff/extension.png" alt="extension"/> Load up the extension thingy
+  </div>
+
+  <h3 style="margin-top:25px;">Games you may like</h3>
+  <div class="top-games">
+    <div class="game"><img src="https://orig00.deviantart.net/4ad2/f/2017/243/9/a/minecraft_grass_block_vector_by_astrorious-dblzbbl.png"/><br>Minecraft 1.5.2</div>
+    <div class="game"><img src="https://neal.fun/general/plant.webp"/><br>Neal.fun</div>
+    <div class="game"><img src="https://classicgamezone.com/games/icons/arcade.svg"/><br>Classicgamezone</div>
+    <div class="game"><img src="https://geometry-games.online/img/site/logo.jpeg"/><br>Geometry-games</div>
+    <div class="game"><img src="https://th.bing.com/th/id/ODF.X81Tj5X7FNqRdueVSZXTSA"/><br>GamesLOL</div>
+  </div>
+
+  <div id="recentlyPlayedBox">
+    <h3>Recently played</h3>
+    <div id="recentList" class="recent-list"></div>
+    <p style="margin-top:10px; font-size:12px; opacity:0.7;">(recently opened)</p>
+  </div>
+</div>
+
+<!-- GAMES -->
+<div id="games" class="panel">
+  <h2>Games</h2>
+  <div class="link-button" onclick="openLink('https://reading-old.q13x.com/','Minecraft 1.5.2','https://th.bing.com/th/id/R.408c47dfb49d78012a4f781698e3407f?rik=bf2RgmY4gZ48zw&pid=ImgRaw&r=0')">
+    <img src="https://th.bing.com/th/id/R.408c47dfb49d78012a4f781698e3407f?rik=bf2RgmY4gZ48zw&pid=ImgRaw&r=0" alt="minecraft"/> Minecraft 1.5.2
+  </div>
+  <div class="link-button" onclick="openLink('http://neal.fun','Neal.fun','https://neal.fun/general/plant.webp')">
+    <img src="https://neal.fun/general/plant.webp"/> Neal.fun
+  </div>
+  <div class="link-button" onclick="openLink('https://en.gameslol.net/#google_vignette','GamesLOL','https://th.bing.com/th/id/ODF.X81Tj5X7FNqRdueVSZXTSA')">
+    <img src="https://th.bing.com/th/id/ODF.X81Tj5X7FNqRdueVSZXTSA"/> GamesLOL
+  </div>
+  <div class="link-button" onclick="openLink('https://geometry-games.online/games.html','Geometry Games','https://geometry-games.online/img/site/logo.jpeg')">
+    <img src="https://img.icons8.com/ios-glyphs/90/ffffff/controller.png"/> Geometry Games
+  </div>
+</div>
+
+<!-- EMULATION -->
+<div id="emulation" class="panel">
+  <h2>Emulation</h2>
+  <div class="link-button" onclick="openLink('https://classicgamezone.com/','Classicgamezone','https://classicgamezone.com/games/icons/arcade.svg')">
+    <img src="https://classicgamezone.com/games/icons/arcade.svg"/> Classicgamezone
+  </div>
+  <div class="link-button" onclick="openLink('https://example.com/emulator','Emulator 2','https://img.icons8.com/ios-glyphs/30/ffffff/game-console.png')">
+    <img src="https://img.icons8.com/ios-glyphs/30/ffffff/game-console.png"/> Emulator 2
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="panel">
+  <h2>Settings</h2>
+  <h3>Open link as:</h3>
+  <select id="linkSelect" onchange="changeLinkMode(this.value)" style="padding:10px; width:200px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); color:white; border-radius:8px; font-size:16px;">
+    <option value="normal">Normal</option>
+    <option value="duck">DuckDuckGo</option>
+    <option value="bing">Bing</option>
+    <option value="google">Google</option>
+    <option value="iframe">In-app (iframe)</option>
+  </select>
+  <h3 style="margin-top:18px;">Recent history</h3>
+  <button onclick="clearRecent()" style="padding:8px 12px; border-radius:8px; background:rgba(255,255,255,0.06); border:none; color:white; cursor:pointer;">
+    Clear Recently Played
+  </button>
+</div>
+
+<!-- ABOUT -->
+<div id="about" class="panel">
+  <h2>About</h2>
+  <p>Andromeda is released in 11/15/25 …</p>
+  <p>Andromeda is a website that stores unblocked links like games, proxys and everything. Andromeda has no ways to bypass school extensions, exploiting or anything related to this</p>
+  <p>If you wanna suggest a link, report or add changes to Andromeda, email me and i got u. Make sure links are PG-13 or less.</p>
+  <p>Btw i asked chatgpt to create this website and bro... dont ever work with chatgpt because they keep making 5% of the script they give me,
+     adding features that i didnt ask for and add bugs. Basicly chatgpt is doing the most random shit ever.</p>
+  <p>.</p>
+  <p>GMAIL: rdgadvance112911@gmail.com</p>
+  <p>Version: 1.0</p>
+</div>
+
+<!-- UPDATE POPUP -->
+<div id="updateOverlay">
+  <div id="updatePopup">
+    <h2 id="updateTitle">New Update Available!</h2>
+    <p id="updateMsg">Andromeda has been released! 11/15/25</p>
+    <button onclick="closeUpdate()">Close</button>
+  </div>
+</div>
+
+<script>
+
+  /* ---------- Link mode ---------- */
+  let linkMode = "normal";
+  function changeLinkMode(mode) { linkMode = mode; }
+
+  function openLink(url, title = "", icon = "") {
+    addRecent({ url, title: title || url, icon: icon || null });
+
+    const viewer = document.getElementById("viewerFrame");
+
+    if (linkMode === "normal") {
+      viewer.style.display = "none";
+      window.open(url, "_blank");
+      return;
+    }
+
+    let finalURL = url;
+    if (linkMode === "duck") finalURL = `https://duckduckgo.com/?q=${encodeURIComponent(url)}`;
+    if (linkMode === "bing") finalURL = `https://www.bing.com/search?q=${encodeURIComponent(url)}`;
+    if (linkMode === "google") finalURL = `https://www.google.com/search?q=${encodeURIComponent(url)}`;
+    if (linkMode === "iframe") finalURL = url;
+
+    viewer.src = finalURL;
+    document.querySelectorAll(".panel").forEach(p => p.style.display = "none");
+    viewer.style.display = "block";
+  }
+
+  /* ---------- Recently Played ---------- */
+  const RECENT_KEY = "andromeda_recent_links_v1";
+  const MAX_RECENT = 3;
+
+  function addRecent(item) {
+    try {
+      const raw = localStorage.getItem(RECENT_KEY);
+      let arr = raw ? JSON.parse(raw) : [];
+
+      const normalized = {
+        url: item.url,
+        title: (item.title || item.url).toString(),
+        icon: item.icon || null,
+        ts: Date.now()
+      };
+
+      arr = arr.filter(e => e.url !== normalized.url);
+      arr.unshift(normalized);
+      if (arr.length > MAX_RECENT) arr = arr.slice(0, MAX_RECENT);
+
+      localStorage.setItem(RECENT_KEY, JSON.stringify(arr));
+      renderRecentlyPlayed();
+    } catch {}
+  }
+
+  function getRecent() {
+    try {
+      const raw = localStorage.getItem(RECENT_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function clearRecent() {
+    localStorage.removeItem(RECENT_KEY);
+    renderRecentlyPlayed();
+  }
+
+  function renderRecentlyPlayed() {
+    const container = document.getElementById("recentList");
+    container.innerHTML = "";
+
+    const items = getRecent();
+    if (!items.length) {
+      container.innerHTML =
+        `<div style="opacity:0.7; font-size:13px;">No recently played links yet - play something.</div>`;
+      return;
+    }
+
+    items.forEach(it => {
+      const div = document.createElement("div");
+      div.className = "recent-item";
+      div.onclick = () => openLink(it.url, it.title, it.icon);
+
+      const img = document.createElement("img");
+      img.src = it.icon || "https://img.icons8.com/ios-glyphs/90/ffffff/controller.png";
+
+      const t = document.createElement("div");
+      t.className = "recent-title";
+      t.innerText = it.title.length > 36 ? it.title.slice(0,36)+"…" : it.title;
+
+      div.appendChild(img);
+      div.appendChild(t);
+      container.appendChild(div);
+    });
+  }
+
+  /* ---------- Galaxy Animation ---------- */
+  const canvas = document.getElementById('galaxy');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const stars = [];
+  for (let i = 0; i < 300; i++) {
+    stars.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      size: Math.random()*2,
+      speed: Math.random()*0.5 + 0.2
+    });
+  }
+
+  function animate() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = "white";
+
+    stars.forEach(s => {
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+      ctx.fill();
+      s.y += s.speed;
+      if (s.y > canvas.height) {
+        s.y = 0;
+        s.x = Math.random()*canvas.width;
+      }
+    });
+
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  /* ---------- Clock ---------- */
+  function updateClock() {
+    const now = new Date();
+    let h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+    let ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12; if (h === 0) h = 12;
+
+    document.getElementById("clock").textContent =
+      `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")} ${ampm}`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  /* ---------- Panels ---------- */
+  function showPanel(id) {
+    document.getElementById("viewerFrame").style.display = "none";
+
+    document.querySelectorAll(".panel").forEach(p => {
+      if (p.id === id) {
+        p.style.display = "block";
+        setTimeout(() => p.classList.add("active"), 10);
+      } else {
+        p.classList.remove("active");
+        setTimeout(() => p.style.display = "none", 500);
+      }
+    });
+  }
+
+  /* ---------- Popup ---------- */
+  function syncUpdateFrame() {
+    document.getElementById("dashUpdateTitle").textContent =
+      document.getElementById("updateTitle").textContent;
+
+    document.getElementById("dashUpdateMsg").textContent =
+      document.getElementById("updateMsg").textContent;
+  }
+
+  function showUpdate() {
+    syncUpdateFrame();
+    document.getElementById("updateOverlay").style.display = "flex";
+  }
+
+  function closeUpdate() {
+    document.getElementById("updateOverlay").style.display = "none";
+  }
+
+  setTimeout(showUpdate, 800);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    renderRecentlyPlayed();
+    syncUpdateFrame();
+  });
+
+</script>
+</body>
+</html>
