@@ -1,217 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Geometry Dash Demo</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-html, body {
-  margin: 0;
-  padding: 0;
-  background: black;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
-}
-
-#container {
-  width: 1000px;
-  height: 1000px;
-  position: relative;
-}
-
-/* GAME */
-canvas {
-  width: 1000px;
-  height: 1000px;
-  background: linear-gradient(#111, #000);
-  border: 4px solid #222;
-}
-
-/* JUMPSCARE */
-#jumpscare {
-  position: absolute;
-  inset: 0;
-  width: 1000px;
-  height: 1000px;
-  display: none;
-  z-index: 9999;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disclaimer</title>
 </head>
-<body>
+<body style="background-color: white;">
+  <h1>Disclaimer</h1>
+  <p>
+This website is does not own any of these games. All rights belong to the respective owners.
+  </p>
+	  <p>
+There are other games that is included are <b>Mild sexual</b> content but theres no Nudity, Graphic sexual content or explicit sexual humor and Sexual acts or sexualized scenes.
+  </p>
+		  <p>
+There are other games that is included <b>Swearing</b> content like Damn, Hell, Asshole, and Crap. Not the ones that are the F word, B word and other swearings related to that.
+  </p>
 
-<div id="container">
-  <canvas id="game" width="1000" height="1000"></canvas>
-  <div id="jumpscare"></div>
-</div>
+			  <p>
+There are other games that is included <b>Jumpscares/Horror</b> content like Mild Horror jumpscares and Mild blood. Not the ones with severe blood/gore.
+  </p>
 
-<script>
-/* =========================
-   CANVAS
-========================= */
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
+				  <p>
+There are other games that is included <b>Blood</b> content like Scrapes, Small cuts and Minor injurys. Not the ones thats super detailed blood or severe gore.
+  </p>
+					  <p>
+There are other games that is included <b>Humor</b> content like Mild crude humor, Mild sexual humor. Not the ones thats Explicit, Super dark humor and hate speech.
+  </p>
 
-/* =========================
-   GAME SETTINGS
-========================= */
-let gravity = 1;
-let jumpPower = -20;
-let speed = 8;
-let gameRunning = true;
-let dead = false;
-
-/* =========================
-   PLAYER
-========================= */
-const groundY = 850;
-
-const player = {
-  x: 200,
-  y: groundY - 50,
-  size: 50,
-  velY: 0,
-  grounded: true
-};
-
-/* =========================
-   OBSTACLES
-========================= */
-let obstacles = [];
-
-function spawnObstacle() {
-  obstacles.push({
-    x: canvas.width + 50,
-    y: groundY - 50,
-    w: 50,
-    h: 50
-  });
-}
-
-setInterval(() => {
-  if (gameRunning) spawnObstacle();
-}, 1200);
-
-/* =========================
-   SOUND
-========================= */
-const jumpscareSound = new Audio("https://ia601702.us.archive.org/14/items/xscream-2/Xscream2.wav");
-jumpscareSound.volume = 1.0;
-jumpscareSound.preload = "auto";
-
-/* =========================
-   INPUT
-========================= */
-function jump() {
-  if (player.grounded && gameRunning) {
-    player.velY = jumpPower;
-    player.grounded = false;
-  }
-}
-
-window.addEventListener("keydown", e => {
-  if (e.code === "Space") jump();
-});
-
-window.addEventListener("mousedown", jump);
-
-/* =========================
-   GAME LOOP
-========================= */
-function update() {
-  if (!gameRunning) return;
-
-  player.velY += gravity;
-  player.y += player.velY;
-
-  if (player.y >= groundY - player.size) {
-    player.y = groundY - player.size;
-    player.velY = 0;
-    player.grounded = true;
-  }
-
-  obstacles.forEach(o => o.x -= speed);
-  obstacles = obstacles.filter(o => o.x + o.w > 0);
-
-  for (let o of obstacles) {
-    if (
-      player.x < o.x + o.w &&
-      player.x + player.size > o.x &&
-      player.y < o.y + o.h &&
-      player.y + player.size > o.y
-    ) {
-      loseGame();
-    }
-  }
-}
-
-function draw() {
-  if (!gameRunning) return;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  ctx.fillStyle = "#222";
-  ctx.fillRect(0, groundY, canvas.width, 150);
-
-  ctx.fillStyle = "#00ffff";
-  ctx.fillRect(player.x, player.y, player.size, player.size);
-
-  ctx.fillStyle = "red";
-  obstacles.forEach(o => {
-    ctx.beginPath();
-    ctx.moveTo(o.x, o.y + o.h);
-    ctx.lineTo(o.x + o.w / 2, o.y);
-    ctx.lineTo(o.x + o.w, o.y + o.h);
-    ctx.closePath();
-    ctx.fill();
-  });
-}
-
-function loop() {
-  update();
-  draw();
-  requestAnimationFrame(loop);
-}
-
-/* =========================
-   LOSE GAME — ONE-TIME SCARE
-========================= */
-function loseGame() {
-  if (dead) return;
-  dead = true;
-  gameRunning = false;
-
-  canvas.style.display = "none";
-
-  const scareBox = document.getElementById("jumpscare");
-
-  // CREATE GIF ONCE
-  const img = document.createElement("img");
-  img.src = "https://i.pinimg.com/originals/f6/27/48/f62748820fbf98c2a998cdbe15d8060c.gif";
-  img.style.width = "100%";
-  img.style.height = "100%";
-  img.style.objectFit = "cover";
-
-  scareBox.appendChild(img);
-  scareBox.style.display = "block";
-
-  jumpscareSound.currentTime = 0;
-  jumpscareSound.play();
-
-  // REMOVE IT COMPLETELY AFTER PLAY
-  setTimeout(() => {
-    scareBox.remove();
-  }, 1200);
-}
-
-/* START */
-loop();
-</script>
-
+			  <p>
+We keep our website PG-13 or less. One of the games in our websites will never be over PG-13.
+  </p>
 </body>
 </html>
+
